@@ -1,7 +1,9 @@
 // Gallery.jsx
-// Gallery page: romantic heading + subtitle over the FloatingHearts backdrop,
-// a responsive masonry photo grid, and a fullscreen lightbox.
-// No slideshow / music player / popup yet — grid + lightbox only.
+// The memory album: "Our Little World ❤️" header + subtitle over the
+// FloatingHearts backdrop, a scattered scrapbook of Polaroids from
+// src/assets/images/gallery/, a fullscreen lightbox, and a softly glowing
+// Polaroid reserved for the next adventure. No routing changes — same page,
+// same navigation, same ambience.
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -10,22 +12,38 @@ import FloatingHearts from '../components/FloatingHearts.jsx'
 import GalleryGrid from '../components/GalleryGrid.jsx'
 import ImageModal from '../components/ImageModal.jsx'
 
-// Auto-discover images in src/assets/images (1.jpg … 50.jpg, etc.).
-// import.meta.glob is resolved at build time, so no 50 manual imports are
-// needed — just drop files into the folder and rebuild.
-const imageModules = import.meta.glob('/src/assets/images/*.{jpg,jpeg,png,webp,svg}', {
+// Auto-discover images in src/assets/images/gallery/ (01.jpg, 02.jpg, …).
+// import.meta.glob is resolved at build time, so no manual imports are needed —
+// just drop files into the folder and rebuild (they display in filename
+// order). .gitkeep is not an image, so it is never picked up.
+const imageModules = import.meta.glob('/src/assets/images/gallery/*.{jpg,jpeg,png,webp,svg}', {
   eager: true,
   query: '?url',
   import: 'default',
 })
 
+// Optional captions — the "metadata" for each photo, keyed by filename. Add an
+// entry here and it appears under that Polaroid; images without an entry fall
+// back to "Our Favorite Memory ❤️". The examples below follow the album's
+// story order (01.jpg → 06.jpg).
+const CAPTIONS = {
+  '01.jpg': '❤️ Our Beginning',
+  '02.jpg': '🌙 Night Walk',
+  '03.jpg': '🚌 Bus Journey',
+  '04.jpg': '📚 Exam Days',
+  '05.jpg': '🍳 Chef of My Heart',
+  '06.jpg': '🎓 Graduation',
+}
+
 const galleryImages = Object.entries(imageModules)
   .sort(([pathA], [pathB]) => pathA.localeCompare(pathB, undefined, { numeric: true }))
   .map(([path, src]) => {
+    const fileName = path.split('/').pop()
     const numberMatch = path.match(/(\d+)/)
     return {
       id: path,
       src,
+      caption: CAPTIONS[fileName],
       alt: numberMatch ? `Memory ${Number(numberMatch[1])}` : 'Memory',
     }
   })
@@ -62,19 +80,27 @@ function Gallery() {
           </Link>
 
           <h1 className="font-display text-3xl font-extrabold leading-tight sm:text-4xl md:text-5xl">
+            <span aria-hidden="true">🌍</span>{' '}
             <span className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-400 bg-clip-text text-transparent">
-              Every Moment With You Is Precious
+              Our Little World
             </span>{' '}
             <span aria-hidden="true">❤️</span>
           </h1>
 
-          <p className="max-w-xl text-base font-light leading-relaxed text-rose-950/70 sm:text-lg">
-            Take a walk down memory lane — every photo here is a little piece of our story. 💞
+          <p className="max-w-xl font-script text-xl leading-relaxed text-rose-800/80 sm:text-2xl">
+            Every picture isn't just a memory...
+            <br />
+            <br />
+            It's another page
+            <br />
+            of the beautiful world
+            <br />
+            we built together.
           </p>
         </motion.header>
 
-        {/* Masonry gallery */}
-        <div className="mt-12 sm:mt-16">
+        {/* Scattered Polaroid scrapbook — starts right after the subtitle */}
+        <div className="mt-8 sm:mt-10">
           <GalleryGrid images={galleryImages} onImageClick={setSelectedIndex} />
         </div>
       </div>

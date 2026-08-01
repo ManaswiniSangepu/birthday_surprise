@@ -167,6 +167,17 @@ function ImageModal({ images = [], currentIndex = 0, onClose, onNavigate }) {
             →
           </button>
         </div>
+
+        {/* Caption under the photo (falls back to the default) */}
+        <motion.p
+          key={`caption-${currentIndex}`}
+          className="rounded-full border border-white/25 bg-white/10 px-5 py-1.5 text-center font-script text-lg leading-snug text-white/95 backdrop-blur-md sm:text-xl"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15, ease: 'easeOut' }}
+        >
+          {image.caption || 'Our Favorite Memory ❤️'}
+        </motion.p>
       </div>
     </motion.div>,
     document.body

@@ -1,140 +1,54 @@
 // StoryBookPage.jsx
-// "/story" — a warm, romantic room for the storybook: soft cream + blush
-// gradients, floating pink hearts and glowing particles behind a realistic
-// open book. The book opens on Chapter One, and "❤️ Our First Meet" turns
-// the page to the image frame + first-meeting spread.
+// "/story" — the single story page. It renders the ambient romantic backdrop
+// and the one StoryBook component, feeding it the chapters from storyData.js.
+// The book owns the chapter index internally (chapterIndex state); this page
+// only supplies the data, the finish action (which lands on the Gallery) and
+// the per-chapter atmosphere (heart density + special particle layers).
 
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import FloatingHearts from '../components/FloatingHearts.jsx'
+import GoldenParticles from '../components/GoldenParticles.jsx'
 import StoryBook from '../components/StoryBook.jsx'
+import FinalEnding from '../components/FinalEnding.jsx'
+import { chapters } from '../data/storyData.js'
 
-// --- Chapter One (left page of the first spread) ----------------------------
-const CHAPTER_ONE_LINES = [
-  'There was a boy...',
-  'A boy I met during college.',
-  'At first,',
-  'he was just another person among hundreds.',
-  'Little did I know,',
-  'he would slowly become the most important person in my life.',
-  'And this...',
-  'is our story.',
-]
-
-const lineVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+// Ambient density per active chapter: [hearts, sparkles]. The autumn chapter
+// and the golden-afternoon chapter thin out the pink floating hearts so their
+// own atmosphere (falling leaves / golden motes) can breathe.
+const HEART_DENSITY = {
+  6: [20, 12], // 🍂 Chapter 7 — calm autumn
+  7: [10, 12], // 👀 Chapter 8 — very minimal, golden classroom afternoon
+  8: [10, 8], // 🤍 Chapter 9 — very subtle, warm golden evening
+  9: [10, 8], // 🌙 Chapter 10 — very subtle, cozy night walk
+  10: [10, 8], // 🫂 Chapter 11 — very minimal, morning bus sunlight
+  11: [10, 8], // 🏍️ Chapter 12 — very subtle, golden-hour first ride
+  12: [10, 8], // ✨ Chapter 13 — very minimal, peaceful night ride
+  13: [10, 8], // 🍳 Chapter 14 — very subtle, cozy kitchen fairy lights
+  15: [10, 8], // 🍫 Chapter 16 — very subtle, warm & playful little things
+  16: [10, 8], // 🚌 Chapter 17 — very subtle, bittersweet goodbye
 }
-const staggerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.14, delayChildren: 0.35 } },
-}
+const GOLDEN_CHAPTER = 7
+const EVENING_GLOW_CHAPTER = 8
+const NIGHT_AMBIANCE_CHAPTER = 9
+const MORNING_GLOW_CHAPTER = 10
+const GOLDEN_HOUR_CHAPTER = 11
+const MOONLIGHT_CHAPTER = 12
+const COZY_KITCHEN_CHAPTER = 13
 
-function ChapterOne() {
-  return (
-    <motion.div
-      variants={staggerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex h-full flex-col"
-    >
-      <motion.p
-        variants={lineVariants}
-        className="font-sans text-[0.68rem] font-semibold uppercase tracking-[0.25em] text-rose-500 sm:text-xs"
-      >
-        Chapter One ❤️
-      </motion.p>
-      <motion.h2
-        variants={lineVariants}
-        className="mt-2 font-display text-lg font-bold leading-snug text-rose-900 sm:text-2xl"
-      >
-        I Want To Tell You A Story...
-      </motion.h2>
-      <motion.div variants={lineVariants} className="mt-2 h-px w-16 bg-gradient-to-r from-rose-400 to-transparent" />
-      <div className="mt-4 space-y-3">
-        {CHAPTER_ONE_LINES.map((line, i) => (
-          <motion.p
-            key={i}
-            variants={lineVariants}
-            className="font-serif text-sm leading-relaxed text-stone-800/90 sm:text-base"
-          >
-            {line}
-          </motion.p>
-        ))}
-      </div>
-    </motion.div>
-  )
-}
-
-// --- Flyleaf (right page of the first spread) ------------------------------
-function Flyleaf() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className="rounded-xl border border-amber-300/60 px-6 py-10 sm:px-10">
-        <div className="text-4xl sm:text-5xl" aria-hidden="true">
-          ❤️
-        </div>
-        <p className="mt-4 font-script text-3xl leading-snug text-rose-700 sm:text-4xl">our story</p>
-        <p className="mt-2 font-serif text-xs italic text-stone-500 sm:text-sm">
-          begins on the next page...
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// --- Image placeholder (left page of the second spread) ---------------------
-function ImageFrame() {
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex h-full w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-rose-300/70 bg-rose-100/30">
-        <div className="text-3xl" aria-hidden="true">
-          🖼️
-        </div>
-        <p className="mt-3 px-4 text-center font-serif text-sm italic text-stone-500 sm:text-base">
-          Image will be added later
-        </p>
-        <p className="mt-1 px-6 text-center font-sans text-[0.62rem] uppercase tracking-[0.2em] text-rose-400/80 sm:text-xs">
-          Our First Meet
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// --- Story text (right page of the second spread) ---------------------------
-function OurFirstMeet() {
-  return (
-    <div className="flex h-full flex-col">
-      <h2 className="font-display text-lg font-bold leading-snug text-rose-900 sm:text-2xl">
-        Our First Meet ❤️
-      </h2>
-      <div className="mt-2 h-px w-16 bg-gradient-to-r from-rose-400 to-transparent" />
-      <div className="mt-4 flex-1 space-y-3 overflow-hidden">
-        <p className="font-serif text-sm italic text-stone-500 sm:text-base">(Placeholder)</p>
-        <p className="font-serif text-sm leading-relaxed text-stone-800/90 sm:text-base">
-          This is where our first meeting story will be written later.
-        </p>
-        {/* Quiet skeleton lines — space reserved for the long paragraph */}
-        <div className="space-y-2.5 pt-2">
-          <p className="h-3 w-full rounded bg-stone-300/40" />
-          <p className="h-3 w-11/12 rounded bg-stone-300/40" />
-          <p className="h-3 w-4/5 rounded bg-stone-300/40" />
-          <p className="h-3 w-3/4 rounded bg-stone-300/40" />
-          <p className="h-3 w-5/6 rounded bg-stone-300/40" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// --- The page ---------------------------------------------------------------
 function StoryBookPage() {
-  const navigate = useNavigate()
-  const spreads = [
-    { left: <ChapterOne />, right: <Flyleaf />, turnLabel: '❤️ Our First Meet' },
-    { left: <ImageFrame />, right: <OurFirstMeet /> },
-  ]
+  const [activeChapter, setActiveChapter] = useState(0)
+  // Pressing Continue on the final chapter (Ch. 20) calls onFinish — instead
+  // of navigating away, the story swaps the book for the Final Ending page.
+  const [showEnding, setShowEnding] = useState(false)
+  const [hearts, sparkles] = HEART_DENSITY[activeChapter] ?? [80, 40]
+  const showGolden = activeChapter === GOLDEN_CHAPTER
+  const showEveningGlow = activeChapter === EVENING_GLOW_CHAPTER
+  const showNightAmbiance = activeChapter === NIGHT_AMBIANCE_CHAPTER
+  const showMorningGlow = activeChapter === MORNING_GLOW_CHAPTER
+  const showGoldenHour = activeChapter === GOLDEN_HOUR_CHAPTER
+  const showMoonlight = activeChapter === MOONLIGHT_CHAPTER
+  const showCozyKitchen = activeChapter === COZY_KITCHEN_CHAPTER
 
   return (
     <motion.div
@@ -158,31 +72,122 @@ function StoryBookPage() {
         className="pointer-events-none absolute left-1/2 top-1/3 h-80 w-80 -translate-x-1/2 rounded-full bg-pink-200/40 blur-3xl"
       />
 
-      {/* Floating pink hearts + glowing particles behind everything */}
-      <FloatingHearts />
+      {/* Soft golden evening lighting — only while the strength chapter is
+          open (Ch. 9). Warm, comforting, hopeful. */}
+      {showEveningGlow && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 72% 28%, rgba(251, 191, 36, 0.22), transparent 55%), radial-gradient(circle at 18% 82%, rgba(245, 158, 11, 0.16), transparent 55%), radial-gradient(circle at 50% 50%, rgba(253, 230, 138, 0.18), transparent 70%)',
+          }}
+        />
+      )}
 
-      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:py-14">
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
-          className="font-script text-2xl text-rose-600/90 sm:text-3xl"
-        >
-          ~ our story book ~
-        </motion.p>
+      {/* Soft night ambiance — only while the night-walk chapter is open
+          (Ch. 10). Deep-blue wash with warm street-light pools; peaceful,
+          cozy, romantic. */}
+      {showNightAmbiance && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 65% 25%, rgba(30, 58, 138, 0.22), transparent 55%), radial-gradient(circle at 20% 80%, rgba(30, 27, 75, 0.25), transparent 60%), radial-gradient(circle at 85% 70%, rgba(251, 191, 36, 0.14), transparent 45%), radial-gradient(circle at 12% 30%, rgba(251, 191, 36, 0.1), transparent 40%)',
+          }}
+        />
+      )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-8 flex w-full justify-center"
-        >
-          <StoryBook
-            spreads={spreads}
-            finishLabel="❤️ We Created Our World"
-            onFinish={() => navigate('/world')}
-          />
-        </motion.div>
+      {/* Soft morning sunlight through bus windows — only while the crowded
+          bus chapter is open (Ch. 11). Warm, protective, comforting. */}
+      {showMorningGlow && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 30% 20%, rgba(253, 230, 138, 0.3), transparent 50%), radial-gradient(circle at 75% 35%, rgba(254, 240, 138, 0.2), transparent 45%), radial-gradient(circle at 50% 65%, rgba(255, 251, 235, 0.18), transparent 60%)',
+          }}
+        />
+      )}
+
+      {/* Golden-hour sunset — only while the first-ride chapter is open
+          (Ch. 12). Exciting, warm, romantic. */}
+      {showGoldenHour && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 25% 75%, rgba(251, 146, 60, 0.2), transparent 55%), radial-gradient(circle at 80% 20%, rgba(251, 191, 36, 0.22), transparent 50%), radial-gradient(circle at 55% 55%, rgba(253, 186, 116, 0.16), transparent 65%)',
+          }}
+        />
+      )}
+
+      {/* Peaceful night ride — only while the ten-minute-ride chapter is open
+          (Ch. 13). Warm street lights mixed with cool moonlight; dreamy,
+          peaceful, romantic. */}
+      {showMoonlight && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 70% 20%, rgba(165, 180, 252, 0.2), transparent 55%), radial-gradient(circle at 20% 80%, rgba(30, 58, 138, 0.22), transparent 60%), radial-gradient(circle at 85% 72%, rgba(251, 191, 36, 0.16), transparent 45%), radial-gradient(circle at 10% 30%, rgba(251, 146, 60, 0.12), transparent 40%)',
+          }}
+        />
+      )}
+
+      {/* Soft warm indoor lighting — only while the made-with-love chapter is
+          open (Ch. 14). Warm, cozy, playful — like a kitchen lit by fairy
+          lights. */}
+      {showCozyKitchen && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 45% 30%, rgba(253, 230, 138, 0.28), transparent 55%), radial-gradient(circle at 75% 75%, rgba(254, 215, 170, 0.2), transparent 50%), radial-gradient(circle at 15% 70%, rgba(255, 237, 213, 0.18), transparent 55%)',
+          }}
+        />
+      )}
+
+      {/* Floating pink hearts + glowing particles behind everything — density
+          reacts to the active chapter (thinned on the autumn & afternoon
+          chapters). */}
+      <FloatingHearts heartCount={hearts} sparkleCount={sparkles} />
+      {/* Golden sunlight motes — only while the classroom chapter is open. */}
+      {showGolden && <GoldenParticles />}
+
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8">
+        {showEnding ? (
+          <FinalEnding />
+        ) : (
+          <>
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="font-script text-2xl text-rose-600/90 sm:text-3xl"
+            >
+              ~ our story book ~
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-6 flex w-full justify-center"
+            >
+              <StoryBook
+                chapters={chapters}
+                onFinish={() => setShowEnding(true)}
+                onChapterChange={setActiveChapter}
+              />
+            </motion.div>
+          </>
+        )}
       </main>
     </motion.div>
   )

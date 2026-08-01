@@ -11,3 +11,280 @@
     @apply font-sans antialiased;
   }
 }
+
+/* --- Story Book reveals ---
+   CSS-driven so they run on the compositor even when requestAnimationFrame
+   is throttled (background tabs, headless, heavy CPU). The natural state of
+   every element is VISIBLE — animations only add polish — so the book can
+   never be left invisible or unclickable by a stalled JS animation. */
+@keyframes story-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+@keyframes illustration-in {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes ken-burns {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1.14);
+  }
+}
+
+/* --- Drifting glowing stars (special touch for select chapters) ---
+   Compositor-safe like the other reveals; purely decorative. The component
+   renders them only for chapters flagged `stars: true` and keeps them
+   pointer-events-none so they never block the book's buttons. */
+@keyframes star-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate3d(14px, -18px, 0) scale(0.7);
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(28px, -36px, 0) scale(1.1);
+    opacity: 0;
+  }
+}
+.story-star {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  /* `both` (backwards) makes each star hold the keyframe's opacity 0 during
+     its stagger delay, so stars fade in one by one instead of popping in
+     statically before their cycle starts. */
+  animation: star-drift 10s ease-in-out infinite both;
+}
+
+/* --- Slow-falling autumn leaves (special touch for select chapters) ---
+   Compositor-safe like the other reveals; purely decorative and
+   pointer-events-none (set in the component). Each leaf falls from above the
+   book to below it with a gentle sway + rotation, fading in and out. */
+@keyframes leaf-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(var(--sway, 18px), 45vh, 0) rotate(calc(var(--spin, 120deg) / 2));
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(0, 115vh, 0) rotate(var(--spin, 120deg));
+    opacity: 0;
+  }
+}
+.story-leaf {
+  position: absolute;
+  top: -6vh;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform;
+  animation: leaf-fall 15s linear infinite both;
+}
+
+/* --- Tiny glowing dust motes (special atmosphere for select chapters) ---
+   A few warm golden motes drift slowly around the book, like memories
+   floating in golden evening light. Compositor-safe like the other reveals,
+   purely decorative, and pointer-events-none (set in the component). */
+@keyframes dust-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(12px, -16px, 0) scale(0.8);
+    opacity: 0.45;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(26px, -34px, 0) scale(1.15);
+    opacity: 0;
+  }
+}
+.story-dust {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: dust-drift 13s ease-in-out infinite both;
+}
+
+/* --- Blinking fireflies + warm street-light pools (special atmosphere for
+   select chapters) ---
+   A cozy night-walk mood: tiny fireflies blink and drift around the book
+   while soft pools of street light glow at its edges. Compositor-safe like
+   the other reveals, purely decorative, and pointer-events-none (set in the
+   component). */
+@keyframes firefly-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0.2;
+  }
+  45% {
+    opacity: 0.85;
+  }
+  65% {
+    opacity: 0.2;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(18px, -22px, 0) scale(1.1);
+    opacity: 0;
+  }
+}
+.story-firefly {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: firefly-drift 10s ease-in-out infinite both;
+}
+
+@keyframes street-light-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+.street-light {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: opacity;
+  animation: street-light-pulse 5s ease-in-out infinite both;
+}
+
+/* --- Golden sunlight motes (special atmosphere for select chapters) ---
+   A few warm golden dust motes drift slowly across the page like sunlight
+   through a quiet classroom window. Compositor-safe like the other reveals,
+   purely decorative, and pointer-events-none (set in the component). */
+@keyframes golden-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--peak, 0.5);
+  }
+  50% {
+    transform: translate3d(calc(var(--dx, 30px) * 0.4), calc(var(--dy, -40px) * 0.6), 0)
+      scale(1.15);
+    opacity: calc(var(--peak, 0.5) * 0.65);
+  }
+  85% {
+    opacity: var(--peak, 0.5);
+  }
+  100% {
+    transform: translate3d(var(--dx, 30px), var(--dy, -40px), 0) scale(0.85);
+    opacity: 0;
+  }
+}
+.golden-particle {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: golden-drift 18s ease-in-out infinite both;
+}
+
+/* --- Twinkling fairy lights (special atmosphere for select chapters) ------
+   Tiny warm lights twinkle softly around the book like string lights in a
+   cozy kitchen. Compositor-safe like the other reveals, purely decorative,
+   and pointer-events-none (set in the component). */
+@keyframes fairy-twinkle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(1px, -2px, 0);
+    opacity: 1;
+  }
+}
+.story-fairy-light {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: fairy-twinkle 3s ease-in-out infinite both;
+}
+
+.story-line,
+.story-title,
+.story-divider {
+  animation: story-fade-up 0.5s ease-out both;
+}
+.story-illustration {
+  animation: illustration-in 1.2s ease-out both;
+}
+.ken-burns {
+  animation: ken-burns 18s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-line,
+  .story-title,
+  .story-divider,
+  .story-illustration,
+  .ken-burns,
+  .story-star,
+  .story-leaf,
+  .golden-particle,
+  .story-dust,
+  .story-firefly,
+  .street-light,
+  .story-fairy-light {
+    animation: none !important;
+  }
+}

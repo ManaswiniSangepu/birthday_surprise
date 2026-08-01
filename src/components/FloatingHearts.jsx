@@ -17,11 +17,14 @@ const SPARKLE_COUNT = 40
 const random = (min, max) => Math.random() * (max - min) + min
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
-function FloatingHearts() {
-  // Random values generated once — never regenerated, no timers involved.
+// `heartCount` / `sparkleCount` let pages thin out the atmosphere (e.g. the
+// Story Book's autumn chapter reduces the floating hearts). Defaults match
+// the original densities.
+function FloatingHearts({ heartCount = HEART_COUNT, sparkleCount = SPARKLE_COUNT }) {
+  // Random values generated once per density — never regenerated, no timers.
   const hearts = useMemo(
     () =>
-      Array.from({ length: HEART_COUNT }, (_, i) => ({
+      Array.from({ length: heartCount }, (_, i) => ({
         id: i,
         emoji: pick(EMOJIS),
         left: random(0, 100), // horizontal position (% of viewport width)
@@ -34,12 +37,12 @@ function FloatingHearts() {
         sway: random(3, 7), // sway cycle duration (s)
         tilt: random(-14, 14), // subtle rotation (deg)
       })),
-    []
+    [heartCount]
   )
 
   const sparkles = useMemo(
     () =>
-      Array.from({ length: SPARKLE_COUNT }, (_, i) => ({
+      Array.from({ length: sparkleCount }, (_, i) => ({
         id: i,
         left: random(0, 100),
         top: random(0, 100),
@@ -48,13 +51,14 @@ function FloatingHearts() {
         duration: random(2.5, 6), // twinkle cycle (s)
         delay: random(0, 5),
       })),
-    []
+    [sparkleCount]
   )
 
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      data-hearts-count={hearts.length}
     >
       {/* Sparkle layer (behind hearts) */}
       <div className="absolute inset-0">
