@@ -483,14 +483,9 @@ function StoryBook({ chapters, onFinish, onChapterChange }) {
   const prevChapter =
     turning && turnDir === -1 ? chapters[Math.max(chapterIndex - 1, 0)] : null
 
-  // --- TEMP DEBUG (remove once the user confirms the button works) ---
+  // Let the page react to the active chapter (e.g. thin out the floating
+  // hearts on the autumn chapter).
   useEffect(() => {
-    console.log('[DEBUG] StoryBook mounted — chapters.length =', chapters.length)
-  }, [])
-  useEffect(() => {
-    console.log('[DEBUG] chapterIndex changed →', chapterIndex)
-    // Let the page react to the active chapter (e.g. thin out the floating
-    // hearts on the autumn chapter).
     onChapterChange?.(chapterIndex)
   }, [chapterIndex, onChapterChange])
 
@@ -503,7 +498,6 @@ function StoryBook({ chapters, onFinish, onChapterChange }) {
 
   const startTurn = (dir) => {
     if (turnInFlight.current) return
-    console.log('[DEBUG] startTurn — chapterIndex before turn =', chapterIndex, '| dir =', dir)
     turnInFlight.current = true
     setTurnDir(dir)
     setTurning(true)
@@ -517,27 +511,14 @@ function StoryBook({ chapters, onFinish, onChapterChange }) {
   // "Continue Our Story": play the page-turn animation, then (via the timer
   // above) render the next chapter. The final chapter finishes the book.
   const handleContinue = () => {
-    console.log(
-      '[DEBUG] Button clicked — chapterIndex =',
-      chapterIndex,
-      '| isLastChapter =',
-      isLastChapter
-    )
-    if (turnInFlight.current) {
-      console.log('[DEBUG] click ignored — a turn is already in flight')
-      return
-    }
+    if (turnInFlight.current) return
     if (isLastChapter) onFinish?.()
     else startTurn(1)
   }
 
   // "← Previous": reverse page-turn back to the previous chapter.
   const handleBack = () => {
-    console.log('[DEBUG] Previous clicked — chapterIndex =', chapterIndex)
-    if (turnInFlight.current) {
-      console.log('[DEBUG] click ignored — a turn is already in flight')
-      return
-    }
+    if (turnInFlight.current) return
     if (chapterIndex === 0) return
     startTurn(-1)
   }
@@ -575,10 +556,6 @@ function StoryBook({ chapters, onFinish, onChapterChange }) {
 
   return (
     <div id="story-book" className="relative w-[min(88vw,1500px)]" data-chapter={chapterIndex}>
-      {/* TEMP DEBUG — live chapter index on screen; remove once confirmed */}
-      <div className="pointer-events-none fixed bottom-3 left-3 z-50 rounded-full bg-black/70 px-3 py-1.5 font-mono text-xs text-white">
-        Current Chapter: {chapterIndex}
-      </div>
       {/* Soft ambient glow behind the book */}
       <div aria-hidden="true" className="absolute -inset-10 rounded-[4rem] bg-rose-200/40 blur-3xl" />
 

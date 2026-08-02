@@ -2,17 +2,46 @@
 // "/world" — "We Created Our World". A warm, nostalgic page where memories
 // appear as printed Polaroids scattered on a table. Each photo drops in from
 // above, lands with a soft bounce, and opens into a premium fullscreen viewer.
-// This should feel handcrafted and emotional — never like a standard gallery.
+// The photos are the same Memory Album images (src/assets/images/gallery/),
+// shared automatically via import.meta.glob. The final button continues the
+// experience to the Birthday Surprise.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import FloatingHearts from '../components/FloatingHearts.jsx'
-
-// Reserved IDs for future interactivity:
-//   #world-page, #another-page-button
+import usePageTitle from '../hooks/usePageTitle.js'
 
 const random = (min, max) => Math.random() * (max - min) + min
+
+// Auto-discover the same photos as the Memory Album (shared album).
+const imageModules = import.meta.glob('/src/assets/images/gallery/*.{jpg,jpeg,png,webp,svg}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+
+const CAPTIONS = {
+  '01.jpg': '❤️ Our Beginning',
+  '02.jpg': '🌙 Night Walk',
+  '03.jpg': '🚌 Bus Journey',
+  '04.jpg': '📚 Exam Days',
+  '05.jpg': '🍳 Chef of My Heart',
+  '06.jpg': '🎓 Graduation',
+}
+
+const galleryImages = Object.entries(imageModules)
+  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB, undefined, { numeric: true }))
+  .map(([path, src]) => {
+    const fileName = path.split('/').pop()
+    const numberMatch = path.match(/(\d+)/)
+    return {
+      src,
+      caption: CAPTIONS[fileName],
+      alt: numberMatch ? `Memory ${Number(numberMatch[1])}` : 'Memory',
+    }
+  })
 
 // Hand-tuned anchors (left%, top%, width%, rotation) — the "random" feel comes
 // from rotation, size, and a small position jitter, while the base layout stays
@@ -35,8 +64,8 @@ const ANCHORS = [
 ]
 
 const HEADER_LINES = [
-  'Every picture here isn\'t just a memory...',
-  'It\'s a tiny piece of the beautiful world we built together.',
+  "Every picture here isn't just a memory...",
+  "It's a tiny piece of the beautiful world we built together.",
   'Each photo holds a smile,',
   'a laugh,',
   'a memory,',
@@ -46,13 +75,19 @@ const HEADER_LINES = [
 // --- Polaroid wall ----------------------------------------------------------
 
 function buildPolaroids() {
-  return ANCHORS.map((a, i) => ({
-    id: i,
-    left: a.left + random(-1.2, 1.2),
-    top: a.top + random(-1.5, 1.5),
-    size: a.size + random(-1, 1),
-    rotate: a.rotate + random(-1.5, 1.5),
-  }))
+  return ANCHORS.map((a, i) => {
+    const image = galleryImages[i % galleryImages.length]
+    return {
+      id: i,
+      left: a.left + random(-1.2, 1.2),
+      top: a.top + random(-1.5, 1.5),
+      size: a.size + random(-1, 1),
+      rotate: a.rotate + random(-1.5, 1.5),
+      src: image.src,
+      alt: image.alt,
+      caption: image.caption,
+    }
+  })
 }
 
 function Polaroid({ photo, index, total, onSelect }) {
@@ -120,21 +155,18 @@ function Polaroid({ photo, index, total, onSelect }) {
         ))}
       </span>
 
-      {/* Placeholder photo area */}
-      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-sm bg-gradient-to-br from-rose-100 via-pink-50 to-amber-50">
-        <div className="text-center">
-          <div className="text-xl sm:text-2xl" aria-hidden="true">
-            📷
-          </div>
-          <p className="mt-1 font-serif text-xs font-medium text-rose-800/80 sm:text-sm">
-            Photo {index + 1}
-          </p>
-        </div>
-      </div>
+      {/* The photo itself */}
+      <img
+        src={photo.src}
+        alt={photo.alt}
+        loading="lazy"
+        decoding="async"
+        className="aspect-[4/5] w-full rounded-sm object-cover"
+      />
 
       {/* Polaroid caption */}
-      <p className="absolute inset-x-0 bottom-2 text-center font-script text-sm text-rose-500/80 sm:text-base">
-        our little world • {index + 1}
+      <p className="absolute inset-x-0 bottom-2 truncate px-1 text-center font-script text-sm text-rose-500/80 sm:text-base">
+        {photo.caption || 'our little world'}
       </p>
     </motion.button>
   )
@@ -154,6 +186,7 @@ function PhotoWall({ polaroids, onSelect }) {
 
 function WorldModal({ polaroids, index, onClose, onNavigate }) {
   const count = polaroids.length
+  const photo = polaroids[index]
   const dialogRef = useRef(null)
   const restoreRef = useRef(null)
 
@@ -211,6 +244,8 @@ function WorldModal({ polaroids, index, onClose, onNavigate }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, count, onClose, onNavigate])
 
+  if (!photo) return null
+
   const glassButton =
     'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/15 text-lg text-white backdrop-blur-md transition hover:scale-110 hover:bg-white/25 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-300/60'
 
@@ -262,30 +297,19 @@ function WorldModal({ polaroids, index, onClose, onNavigate }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
           >
-            <div className="flex aspect-[4/5] w-full items-center justify-center rounded-sm bg-gradient-to-br from-rose-100 via-pink-50 to-amber-50">
-              <div className="text-center">
-                <div className="text-3xl" aria-hidden="true">
-                  📷
-                </div>
-                <p className="mt-1 font-serif text-sm font-medium text-rose-800/80">
-                  Photo {index + 1}
-                </p>
-              </div>
-            </div>
-            <p className="mt-3 text-center font-script text-lg text-rose-500/80">
-              our little world • {index + 1}
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              className="aspect-[4/5] w-full rounded-sm object-cover"
+            />
+            <p className="mt-3 truncate text-center font-script text-lg text-rose-500/80">
+              {photo.caption || 'our little world'}
             </p>
           </motion.div>
 
           <button type="button" onClick={next} aria-label="Next photo" className={glassButton}>
             →
           </button>
-        </div>
-
-        {/* Reserved space: photo title + description (added later) */}
-        <div className="w-full max-w-sm text-center">
-          <p className="font-display text-lg font-semibold italic text-white/90">Photo Title</p>
-          <p className="mt-1 font-serif text-sm italic text-white/60">Photo Description</p>
         </div>
       </div>
     </motion.div>,
@@ -295,7 +319,7 @@ function WorldModal({ polaroids, index, onClose, onNavigate }) {
 
 // --- Bottom section ----------------------------------------------------------
 
-function BottomSection() {
+function BottomSection({ onNext }) {
   return (
     <section className="relative mx-auto mt-16 max-w-2xl text-center sm:mt-20">
       <motion.p
@@ -327,6 +351,7 @@ function BottomSection() {
         <motion.button
           id="another-page-button"
           type="button"
+          onClick={onNext}
           animate={{ y: [0, -6, 0] }}
           transition={{
             y: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
@@ -342,7 +367,7 @@ function BottomSection() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-white/30 via-transparent to-white/10"
           />
-          <span className="relative">❤️ Let&apos;s Turn Another Page</span>
+          <span className="relative">🎂 One More Surprise Awaits...</span>
         </motion.button>
       </motion.div>
     </section>
@@ -352,8 +377,10 @@ function BottomSection() {
 // --- The page ----------------------------------------------------------------
 
 function WorldPage() {
+  usePageTitle('We Created Our World ❤️')
   const polaroids = useMemo(buildPolaroids, [])
   const [selected, setSelected] = useState(null)
+  const navigate = useNavigate()
 
   return (
     <motion.div
@@ -433,7 +460,7 @@ function WorldPage() {
         <PhotoWall polaroids={polaroids} onSelect={setSelected} />
 
         {/* Bottom quote + button */}
-        <BottomSection />
+        <BottomSection onNext={() => navigate('/birthday-surprise')} />
       </main>
 
       {selected !== null && (

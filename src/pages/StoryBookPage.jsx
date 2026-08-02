@@ -2,15 +2,17 @@
 // "/story" — the single story page. It renders the ambient romantic backdrop
 // and the one StoryBook component, feeding it the chapters from storyData.js.
 // The book owns the chapter index internally (chapterIndex state); this page
-// only supplies the data, the finish action (which lands on the Gallery) and
-// the per-chapter atmosphere (heart density + special particle layers).
+// only supplies the data, the finish action (which lands on the Memory Album)
+// and the per-chapter atmosphere (heart density + special particle layers).
+// Navigation order: Storybook → Memory Album → Birthday Surprise → Final Ending.
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import FloatingHearts from '../components/FloatingHearts.jsx'
 import GoldenParticles from '../components/GoldenParticles.jsx'
 import StoryBook from '../components/StoryBook.jsx'
-import FinalEnding from '../components/FinalEnding.jsx'
+import usePageTitle from '../hooks/usePageTitle.js'
 import { chapters } from '../data/storyData.js'
 
 // Ambient density per active chapter: [hearts, sparkles]. The autumn chapter
@@ -37,10 +39,9 @@ const MOONLIGHT_CHAPTER = 12
 const COZY_KITCHEN_CHAPTER = 13
 
 function StoryBookPage() {
+  usePageTitle('Our Story Book ❤️')
   const [activeChapter, setActiveChapter] = useState(0)
-  // Pressing Continue on the final chapter (Ch. 20) calls onFinish — instead
-  // of navigating away, the story swaps the book for the Final Ending page.
-  const [showEnding, setShowEnding] = useState(false)
+  const navigate = useNavigate()
   const [hearts, sparkles] = HEART_DENSITY[activeChapter] ?? [80, 40]
   const showGolden = activeChapter === GOLDEN_CHAPTER
   const showEveningGlow = activeChapter === EVENING_GLOW_CHAPTER
@@ -161,33 +162,27 @@ function StoryBookPage() {
       {showGolden && <GoldenParticles />}
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8">
-        {showEnding ? (
-          <FinalEnding />
-        ) : (
-          <>
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.15 }}
-              className="font-script text-2xl text-rose-600/90 sm:text-3xl"
-            >
-              ~ our story book ~
-            </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15 }}
+          className="font-script text-2xl text-rose-600/90 sm:text-3xl"
+        >
+          ~ our story book ~
+        </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-6 flex w-full justify-center"
-            >
-              <StoryBook
-                chapters={chapters}
-                onFinish={() => setShowEnding(true)}
-                onChapterChange={setActiveChapter}
-              />
-            </motion.div>
-          </>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-6 flex w-full justify-center"
+        >
+          <StoryBook
+            chapters={chapters}
+            onFinish={() => navigate('/gallery')}
+            onChapterChange={setActiveChapter}
+          />
+        </motion.div>
       </main>
     </motion.div>
   )

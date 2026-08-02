@@ -10,6 +10,7 @@ import { motion } from 'framer-motion'
 import NightSky from '../components/NightSky.jsx'
 import LetterEnvelope from '../components/LetterEnvelope.jsx'
 import MusicPlayer from '../components/MusicPlayer.jsx'
+import usePageTitle from '../hooks/usePageTitle.js'
 
 // Reserved IDs for future interactivity:
 //   #home-page, #letter-envelope, #letter-paper, #next-page-button
@@ -179,6 +180,7 @@ function Home() {
   const [phase, setPhase] = useState('intro')
   const [flipping, setFlipping] = useState(false)
   const navigate = useNavigate()
+  usePageTitle('For My Love ❤️')
 
   // Immediately after the final sentence fades away, the envelope descends.
   useEffect(() => {
@@ -205,6 +207,17 @@ function Home() {
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12 sm:py-16">
         {phase === 'intro' && (
           <div className="relative flex h-[55vh] w-full items-center justify-center">
+            {/* Skip the cinematic intro — jump straight to the letter */}
+            <motion.button
+              type="button"
+              onClick={() => setPhase('letter')}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              className="absolute bottom-2 right-0 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-medium text-rose-100/80 backdrop-blur-md transition hover:bg-white/20 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-300/50 sm:text-sm"
+            >
+              Skip intro ⏭
+            </motion.button>
             {INTRO_LINES.map((line, i) => (
               <motion.p
                 key={line}

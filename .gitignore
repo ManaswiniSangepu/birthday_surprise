@@ -11,6 +11,10 @@ dist
 dist-ssr
 *.local
 
+# Original (pre-optimization) image backups — the optimized versions in the
+# folders above are what ships; these are kept only as a safety copy.
+src/assets/images/**/_originals/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
